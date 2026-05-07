@@ -17,7 +17,7 @@ def generate_questions(skills, company):
     try:
 
         prompt = f"""
-        Generate 10 interview questions.
+        Generate exactly 5 technical interview questions.
 
         Skills:
         {skills}
@@ -25,13 +25,18 @@ def generate_questions(skills, company):
         Company:
         {company}
 
-        Output only questions.
+        IMPORTANT RULES:
+        - Return ONLY questions
+        - No introduction
+        - No headings
+        - No explanations
+        - No numbering
+        - One question per line
         """
 
         response = client.chat.completions.create(
 
-            model=
-            "meta-llama/llama-3-8b-instruct",
+            model="openai/gpt-3.5-turbo",
 
             messages=[
                 {
@@ -41,7 +46,10 @@ def generate_questions(skills, company):
             ]
         )
 
-        text =response.choices[0].message.content
+        text = (
+            response.choices[0]
+            .message.content
+        )
 
         questions = []
 
@@ -49,9 +57,37 @@ def generate_questions(skills, company):
 
             line = line.strip()
 
-            if line:
+            if not line:
+                continue
 
-                questions.append(line)
+            lower = line.lower()
+
+            # REMOVE unwanted intro lines
+
+            if (
+                    "here are" in lower
+                    or "interview questions" in lower
+                    or "questions:" in lower
+            ):
+                continue
+
+            # remove numbering
+
+            if "." in line[:3]:
+
+                try:
+                    line = line.split(
+                        ".", 1
+                    )[1].strip()
+
+                except:
+                    pass
+
+            questions.append(line)
+
+        # Ensure only 5
+
+        questions = questions[:5]
 
         return questions
 
@@ -60,5 +96,14 @@ def generate_questions(skills, company):
         print("QUESTION ERROR:", e)
 
         return [
-            "Tell me about yourself."
+
+            "Tell me about yourself.",
+
+            "Explain your strongest project.",
+
+            "What is Firebase Authentication?",
+
+            "Explain RecyclerView in Android.",
+
+            "Why should we hire you?"
         ]
