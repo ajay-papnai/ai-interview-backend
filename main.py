@@ -129,6 +129,35 @@ def generate_questions_api(
 
     }
 
+
+# =========================
+# FOLLOW-UP QUESTION API
+# =========================
+
+@app.post("/generate-followup")
+def generate_followup_api(
+        request: FollowUpRequest
+):
+
+    followup_question = generate_follow_up_question(
+
+        request.previous_question,
+
+        request.user_answer,
+
+        request.skills,
+
+        request.company
+    )
+
+    return {
+
+        "status": "success",
+
+        "followup_question": followup_question
+
+    }
+
 @app.post("/analyze-interview")
 def analyze_interview_api(
         request: AnalysisRequest

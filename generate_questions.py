@@ -20,20 +20,29 @@ def generate_questions(skills, company):
     Company:
     {company}
 
-    Output only questions.
+    Return ONLY questions.
+    One question per line.
     """
 
     response = model.generate_content(prompt)
 
-    questions = response.text.split("\n")
+    raw_text = response.text
 
-    cleaned_questions = []
+    questions = []
 
-    for question in questions:
+    for line in raw_text.split("\n"):
 
-        question = question.strip()
+        line = line.strip()
 
-        if question:
-            cleaned_questions.append(question)
+        if line:
 
-    return cleaned_questions
+            # remove numbering
+            line = line.replace("*", "")
+
+            if "." in line[:3]:
+
+                line = line.split(".", 1)[1].strip()
+
+            questions.append(line)
+
+    return questions
