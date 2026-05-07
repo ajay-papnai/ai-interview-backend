@@ -28,7 +28,23 @@ def generate_follow_up_question(
         User Answer:
         {user_answer}
 
-        Generate ONE follow-up interview question.
+        Skills:
+        {skills}
+
+        Company:
+        {company}
+
+        Generate ONLY ONE professional follow-up interview question.
+
+        IMPORTANT RULES:
+        - Return ONLY the question
+        - No introduction
+        - No headings
+        - No explanations
+        - No numbering
+        - Do not say:
+          "Here is a follow-up question"
+        - Keep it short and professional
         """
 
         response = client.chat.completions.create(
@@ -44,10 +60,41 @@ def generate_follow_up_question(
             ]
         )
 
-        return (
+        result = (
             response.choices[0]
             .message.content
         )
+
+        # CLEAN RESPONSE
+
+        result = result.replace(
+            "Here is a follow-up question:",
+            ""
+        )
+
+        result = result.replace(
+            "Here’s a follow-up question:",
+            ""
+        )
+
+        result = result.replace(
+            "Follow-up question:",
+            ""
+        )
+
+        result = result.replace(
+            "Follow up question:",
+            ""
+        )
+
+        result = result.replace(
+            "*",
+            ""
+        )
+
+        result = result.strip()
+
+        return result
 
     except Exception as e:
 
