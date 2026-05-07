@@ -1,48 +1,64 @@
-import google.generativeai as genai
+from openai import OpenAI
+from dotenv import load_dotenv
+import os
 
-genai.configure(
-    api_key="AIzaSyDuzqufK7a4dpiSFRaKv8oynO1JzyTCmlY"
-)
+load_dotenv()
 
-model = genai.GenerativeModel(
-    "gemini-1.5-flash"
+client = OpenAI(
+
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+
+    base_url="https://openrouter.ai/api/v1"
 )
 
 
 def generate_questions(skills, company):
 
-    prompt = f"""
-    Generate 5 interview questions.
+    try:
 
-    Skills:
-    {skills}
+        prompt = f"""
+        Generate 10 interview questions.
 
-    Company:
-    {company}
+        Skills:
+        {skills}
 
-    Return ONLY questions.
-    One question per line.
-    """
+        Company:
+        {company}
 
-    response = model.generate_content(prompt)
+        Output only questions.
+        """
 
-    raw_text = response.text
+        response = client.chat.completions.create(
 
-    questions = []
+            model=
+            "meta-llama/llama-3-8b-instruct",
 
-    for line in raw_text.split("\n"):
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        )
 
-        line = line.strip()
+        text =response.choices[0].message.content
 
-        if line:
+        questions = []
 
-            # remove numbering
-            line = line.replace("*", "")
+        for line in text.split("\n"):
 
-            if "." in line[:3]:
+            line = line.strip()
 
-                line = line.split(".", 1)[1].strip()
+            if line:
 
-            questions.append(line)
+                questions.append(line)
 
-    return questions
+        return questions
+
+    except Exception as e:
+
+        print("QUESTION ERROR:", e)
+
+        return [
+            "Tell me about yourself."
+        ]

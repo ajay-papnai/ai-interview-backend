@@ -1,50 +1,58 @@
-import google.generativeai as genai
+from openai import OpenAI
+from dotenv import load_dotenv
+import os
 
-genai.configure(
-    api_key="AIzaSyDuzqufK7a4dpiSFRaKv8oynO1JzyTCmlY"
-)
+load_dotenv()
 
-model = genai.GenerativeModel(
-    "gemini-1.5-flash"
+client = OpenAI(
+
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+
+    base_url="https://openrouter.ai/api/v1"
 )
 
 
 def generate_follow_up_question(
-
         previous_question,
-
         user_answer,
-
         skills,
-
         company
 ):
 
-    prompt = f"""
-    You are an AI technical interviewer.
+    try:
 
-    Previous Question:
-    {previous_question}
+        prompt = f"""
+        Previous Question:
+        {previous_question}
 
-    User Answer:
-    {user_answer}
+        User Answer:
+        {user_answer}
 
-    Candidate Skills:
-    {skills}
+        Generate ONE follow-up interview question.
+        """
 
-    Target Company:
-    {company}
+        response = client.chat.completions.create(
 
-    Generate ONE natural follow-up interview question.
+            model=
+            "meta-llama/llama-3-8b-instruct",
 
-    Rules:
-    - Ask deeper technical question
-    - Be conversational
-    - Keep concise
-    - Behave like real interviewer
-    - Output only question
-    """
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        )
 
-    response = model.generate_content(prompt)
+        return (
+            response.choices[0]
+            .message.content
+        )
 
-    return response.text
+    except Exception as e:
+
+        print("FOLLOWUP ERROR:", e)
+
+        return (
+            "Can you explain that in more detail?"
+        )

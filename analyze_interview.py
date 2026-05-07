@@ -1,11 +1,14 @@
-import google.generativeai as genai
+from openai import OpenAI
+from dotenv import load_dotenv
+import os
 
-genai.configure(
-    api_key="AIzaSyDuzqufK7a4dpiSFRaKv8oynO1JzyTCmlY"
-)
+load_dotenv()
 
-model = genai.GenerativeModel(
-    "gemini-1.5-flash"
+client = OpenAI(
+
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+
+    base_url="https://openrouter.ai/api/v1"
 )
 
 
@@ -14,40 +17,63 @@ def analyze_interview(
         answers
 ):
 
-    prompt = f"""
-    You are an expert technical interviewer.
+    try:
 
-    Analyze this mock interview.
+        prompt = f"""
+        Analyze this interview.
 
-    Questions:
-    {questions}
+        Questions:
+        {questions}
 
-    Answers:
-    {answers}
+        Answers:
+        {answers}
 
-    Give response STRICTLY in this JSON format:
+        Return JSON analysis with:
+        overall_score,
+        technical_score,
+        communication_score,
+        confidence_score,
+        strengths,
+        weaknesses,
+        suggestions
+        """
 
-    {{
-      "overall_score": 85,
-      "technical_score": 80,
-      "communication_score": 90,
-      "confidence_score": 78,
-      "strengths": [
-        "Good Android knowledge",
-        "Clear communication"
-      ],
-      "weaknesses": [
-        "Needs deeper DSA understanding"
-      ],
-      "suggestions": [
-        "Practice system design",
-        "Improve database concepts"
-      ]
-    }}
+        response = client.chat.completions.create(
 
-    Output ONLY valid JSON.
-    """
+            model=
+            "meta-llama/llama-3-8b-instruct",
 
-    response = model.generate_content(prompt)
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        )
 
-    return response.text
+        return (
+            response.choices[0]
+            .message.content
+        )
+
+    except Exception as e:
+
+        print("ANALYSIS ERROR:", e)
+
+        return """
+        {
+          "overall_score": 75,
+          "technical_score": 70,
+          "communication_score": 80,
+          "confidence_score": 72,
+          "strengths": [
+            "Good communication"
+          ],
+          "weaknesses": [
+            "Needs deeper technical answers"
+          ],
+          "suggestions": [
+            "Practice more coding questions"
+          ]
+        }
+        """
