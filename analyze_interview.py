@@ -20,6 +20,8 @@ def analyze_interview(
     try:
 
         prompt = f"""
+        You are an expert technical interviewer.
+
         Analyze this interview.
 
         Questions:
@@ -28,20 +30,34 @@ def analyze_interview(
         Answers:
         {answers}
 
-        Return JSON analysis with:
-        overall_score,
-        technical_score,
-        communication_score,
-        confidence_score,
-        strengths,
-        weaknesses,
-        suggestions
+        Return ONLY valid JSON.
+
+        Do not add markdown.
+        Do not add ```json.
+        Do not add explanations.
+
+        JSON format:
+
+        {{
+          "overall_score": 85,
+          "technical_score": 80,
+          "communication_score": 90,
+          "confidence_score": 78,
+          "strengths": [
+            "Good Android knowledge"
+          ],
+          "weaknesses": [
+            "Needs deeper DSA understanding"
+          ],
+          "suggestions": [
+            "Practice system design"
+          ]
+        }}
         """
 
         response = client.chat.completions.create(
 
-            model=
-            "meta-llama/llama-3-8b-instruct",
+            model="openai/gpt-3.5-turbo",
 
             messages=[
                 {
@@ -51,10 +67,28 @@ def analyze_interview(
             ]
         )
 
-        return (
+        result = (
             response.choices[0]
             .message.content
         )
+
+        # Clean markdown if model adds it
+
+        result = result.replace(
+            "```json",
+            ""
+        )
+
+        result = result.replace(
+            "```",
+            ""
+        )
+
+        result = result.strip()
+
+        print("ANALYSIS RESULT:", result)
+
+        return result
 
     except Exception as e:
 
