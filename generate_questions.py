@@ -85,9 +85,9 @@ def generate_questions(skills, company):
 
             questions.append(line)
 
-        # Ensure only 5
+        # Ensure only 10
 
-        questions = questions[:5]
+        questions = questions[:10]
 
         return questions
 
