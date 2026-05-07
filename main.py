@@ -1,32 +1,65 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 
+from pydantic import BaseModel
+
 import shutil
 import os
 
 from parser import parse_resume
 
-app = FastAPI(
-    title="AI Interview Resume Parser API"
-)
+from generate_questions import generate_questions
+from follow_up import generate_follow_up_question
+from analyze_interview import analyze_interview
+
+app = FastAPI()
 
 # =========================
-# CORS CONFIG
+# CORS
 # =========================
 
 app.add_middleware(
-
     CORSMiddleware,
-
     allow_origins=["*"],
-
     allow_credentials=True,
-
     allow_methods=["*"],
-
     allow_headers=["*"],
-
 )
+
+# =========================
+# REQUEST MODEL
+# =========================
+
+class QuestionRequest(BaseModel):
+
+    skills: list
+
+    company: str
+
+# ========================
+# FOLLOW-UP QUESTION REQUEST MODEL
+# ========================
+
+class FollowUpRequest(BaseModel):
+
+    previous_question: str
+
+    user_answer: str
+
+    skills: list
+
+    company: str
+
+
+# =========================
+# ANALYTICS
+# =========================
+
+class AnalysisRequest(BaseModel):
+
+    questions: list
+
+    answers: list
 
 # =========================
 # UPLOAD FOLDER
@@ -37,18 +70,14 @@ UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # =========================
-# HOME ROUTE
+# HOME API
 # =========================
 
 @app.get("/")
 def home():
 
     return {
-
-        "status": "success",
-
-        "message": "Resume Parser API Running"
-
+        "message": "API Running"
     }
 
 # =========================
@@ -60,54 +89,63 @@ async def parse_resume_api(
         file: UploadFile = File(...)
 ):
 
-    try:
+    file_path = f"{UPLOAD_FOLDER}/{file.filename}"
 
-        # Validate PDF
+    with open(file_path, "wb") as buffer:
 
-        if not file.filename.endswith(".pdf"):
+        shutil.copyfileobj(file.file, buffer)
 
-            return {
+    result = parse_resume(file_path)
 
-                "status": "error",
+    return {
 
-                "message": "Only PDF files allowed"
+        "status": "success",
 
-            }
+        "data": result
+    }
 
-        # Save file
+# =========================
+# QUESTION GENERATOR API
+# =========================
 
-        file_path = os.path.join(
-            UPLOAD_FOLDER,
-            file.filename
-        )
+@app.post("/generate-questions")
+def generate_questions_api(
+        request: QuestionRequest
+):
 
-        with open(file_path, "wb") as buffer:
+    questions = generate_questions(
 
-            shutil.copyfileobj(file.file, buffer)
+        request.skills,
 
-        # Parse Resume
+        request.company
 
-        result = parse_resume(file_path)
+    )
 
-        # Delete uploaded file after parsing
+    return {
 
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        "status": "success",
 
-        return {
+        "questions": questions
 
-            "status": "success",
+    }
 
-            "data": result
+@app.post("/analyze-interview")
+def analyze_interview_api(
+        request: AnalysisRequest
+):
 
-        }
+    result = analyze_interview(
 
-    except Exception as e:
+        request.questions,
 
-        return {
+        request.answers
 
-            "status": "error",
+    )
 
-            "message": str(e)
+    return {
 
-        }
+        "status": "success",
+
+        "analysis": result
+
+    }
