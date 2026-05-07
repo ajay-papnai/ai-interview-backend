@@ -17,7 +17,7 @@ def generate_questions(skills, company):
     try:
 
         prompt = f"""
-        Generate exactly 5 technical interview questions.
+        Generate exactly 10 technical interview questions.
 
         Skills:
         {skills}
